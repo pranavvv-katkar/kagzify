@@ -1,0 +1,45 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Next.js build output
+/.next/
+/out/
+/build
+
+# Testing & Coverage
+/coverage
+
+# Environment & Secrets (NEVER commit these)
+.env
+.env*.local
+.env.production
+.env.staging
+
+# Prisma & Local Databases
+prisma/*.db
+prisma/*.db-journal
+*.db
+*.db-journal
+
+# TypeScript & Cache
+*.tsbuildinfo
+next-env.d.ts
+
+# Operating System & IDE
+.DS_Store
+*.pem
+Thumbs.db
+.vscode/
+.idea/
+
+# Debug Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vercel
+.vercel

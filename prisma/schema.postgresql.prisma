@@ -1,0 +1,228 @@
+// PostgreSQL schema file for Kagzify Studio
+// To switch your database to PostgreSQL, update .env with your PostgreSQL DATABASE_URL
+// and run: npx prisma db push --schema=prisma/schema.postgresql.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  passwordHash   String
+  role           String          @default("CUSTOMER")
+  phone          String?
+  avatarUrl      String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  orders         Order[]
+  customRequests CustomRequest[]
+  addresses      Address[]
+}
+
+model Address {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  phone      String
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Category {
+  id           String    @id @default(uuid())
+  name         String
+  slug         String    @unique
+  description  String?
+  image        String?
+  icon         String?
+  displayOrder Int       @default(0)
+  createdAt    DateTime  @default(now())
+  products     Product[]
+}
+
+model Product {
+  id                 String         @id @default(uuid())
+  title              String
+  slug               String         @unique
+  description        String
+  shortDescription   String?
+  price              Float
+  discountPercent    Float          @default(0)
+  baseStock          Int            @default(500)
+  isFeatured         Boolean        @default(false)
+  isBestseller       Boolean        @default(false)
+  isPackaging        Boolean        @default(false)
+  isCorporateGift    Boolean        @default(false)
+  categoryId         String
+  category           Category       @relation(fields: [categoryId], references: [id])
+  availableShapes    String         @default("circle,rectangle,hexagon,triangle,heart,square,diecut")
+  shapePriceAdjust   Float          @default(0)
+  minQuantity        Int            @default(50)
+  isCustomizable     Boolean        @default(true)
+  rating             Float          @default(4.9)
+  reviewCount        Int            @default(24)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  images             ProductImage[]
+  variants           Variant[]
+  orderItems         OrderItem[]
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  isPrimary Boolean  @default(false)
+  order     Int      @default(0)
+}
+
+model Variant {
+  id              String   @id @default(uuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name            String
+  size            String?
+  material        String?
+  finish          String?
+  quantity        Int      @default(100)
+  priceAdjustment Float    @default(0)
+  stock           Int      @default(100)
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
+  guestEmail      String?
+  guestName       String?
+  guestPhone      String?
+  status          String      @default("PLACED")
+  paymentStatus   String      @default("PAID")
+  subtotal        Float
+  discount        Float       @default(0)
+  shippingFee     Float       @default(0)
+  tax             Float       @default(0)
+  total           Float
+  shippingAddress String
+  notes           String?
+  trackingNumber  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+  payments        Payment[]
+}
+
+model OrderItem {
+  id                String   @id @default(uuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId         String?
+  product           Product? @relation(fields: [productId], references: [id])
+  title             String
+  unitPrice         Float
+  quantity          Int
+  subtotal          Float
+  shape             String?
+  artworkUrl        String?
+  croppedPreviewUrl String?
+  material          String?
+  finish            String?
+  size              String?
+  customNotes       String?
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method        String
+  transactionId String?
+  amount        Float
+  status        String   @default("COMPLETED")
+  createdAt     DateTime @default(now())
+}
+
+model StockLog {
+  id            String   @id @default(uuid())
+  productId     String
+  productTitle  String
+  previousStock Int
+  change        Int
+  newStock      Int
+  reason        String
+  adminEmail    String?
+  createdAt     DateTime @default(now())
+}
+
+model CustomRequest {
+  id                String   @id @default(uuid())
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id])
+  fullName          String
+  email             String
+  phone             String
+  productType       String
+  quantity          Int
+  dimensions        String?
+  finishPreferences String?
+  notes             String?
+  artworkUrl        String?
+  status            String   @default("PENDING")
+  quoteAmount       Float?
+  quoteNotes        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Testimonial {
+  id           String   @id @default(uuid())
+  customerName String
+  company      String?
+  role         String?
+  rating       Int      @default(5)
+  comment      String
+  avatarUrl    String?
+  isFeatured   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String   @default("General")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model HeroSlide {
+  id               String   @id @default(uuid())
+  badge            String?
+  title            String
+  subtitle         String
+  ctaText          String   @default("Shop Now")
+  ctaLink          String   @default("/products")
+  secondaryCtaText String?
+  secondaryCtaLink String?
+  imageUrl         String
+  bgGradient       String?
+  active           Boolean  @default(true)
+  order            Int      @default(0)
+  createdAt        DateTime @default(now())
+}
